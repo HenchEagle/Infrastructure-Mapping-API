@@ -1,11 +1,21 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from core.extract_apex import extract_apex
-from persistence.writers.db_create_scan_record import create_scan_record
-from persistence.readers.check_last_scan import check_last_scan
-from persistence.readers.read_full_graph import read_full_graph
+from core.configuration import create_config
+from persistence.mysql.mysql_persister import MySQLPersister
 
 app = FastAPI()
+
+config = create_config(source="api")
+
+if config["database"] == "STDOUT":
+    persister = MySQLPersister()
+elif config["database"] == "SQLITE":
+    persister = SQLitePersister()
+elif config["database"] == "POSTGRES":
+    persister = PostgreSQLPersister()
+else:
+    persister = MySQLPersister()
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,6 +47,8 @@ def no_data_exception():
         detail="Failed, No data available for this domain."
     )
 
+
+
 @app.post("/api/v1/scan")
 def start_scan(domain: str):
     apex_domain = extract_apex(domain)
@@ -44,10 +56,10 @@ def start_scan(domain: str):
     if not apex_domain:
         unprocessable_exception()
 
-    last_scanned = check_last_scan(apex_domain)
+    last_scanned = persister.get_last_scan(apex_domain)
 
     if not last_scanned or last_scanned > 24:
-        create_scan_record(apex_domain)
+        persister.create_scan_record(apex_domain)
         return {"message": "SUCCESS"}
     else:
         recently_scanned_exception()
@@ -59,7 +71,7 @@ def retrieve_data(domain: str):
     if not apex_domain:
         unprocessable_exception()
 
-    data = read_full_graph(apex_domain)
+    data = persister.get_full_graph(apex_domain)
 
     if data == {}:
         no_data_exception()

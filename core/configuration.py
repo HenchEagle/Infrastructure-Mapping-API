@@ -23,16 +23,17 @@ def parse_args():
         usage="%(prog)s -d [DOMAIN ...] [options]",
         description="CT Log, pDNS, DNS graph orchestration tool"
     )
-    parser.add_argument("-d", "--domains", nargs="+", metavar="DOMAIN", help="One or more domains to enumerate", required=True)
+    parser.add_argument("-d", "--domains", nargs="+", metavar="DOMAIN", help="One or more domains to enumerate", required=False)
     parser.add_argument("-o", "--output", help="Write results to JSON file, default [./graph.json]", required=False)
+    parser.add_argument("-db", "--database", help="Select DB type in use [MYSQL, POSTGRES, SQLITE]", required=False)
 
     return parser.parse_args()
 
-def create_config():
+def create_config(source="worker"):
     config = load_config_file()
 
+    if source != "api":
+        for arg, value in vars(parse_args()).items():
+            config[arg] = value
+
     return config
-"""
-    for arg, value in vars(parse_args()).items():
-        config[arg] = value
-"""

@@ -70,5 +70,4 @@ class Graph:
             "ip_to_prefix": [asdict(r) for r in self.ip_to_prefix],
             "prefix_to_asn": [asdict(r) for r in self.prefix_to_asn],
             "asn_to_org": [asdict(r) for r in self.asn_to_org],
-            
         }

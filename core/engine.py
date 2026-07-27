@@ -12,45 +12,47 @@ import asyncio
 import time
 
 class Engine():
-    async def run_scan(self, domain, config, scan_id, connection):
-        graph = Graph()
+    def __init__(self, persister):
+        self.persister = persister
+        self.graph = Graph()
 
+    async def run_scan(self, domain, config, scan_id):
         try:
-            graph.apex_domain = domain
-            graph.add_node(FQDN(domain))
+            self.graph.apex_domain = domain
+            self.graph.add_node(FQDN(domain))
 
             start_scan = time.perf_counter()
 
             async with asyncio.TaskGroup() as tg:
                 print("\n-- [+] BEGIN PASSIVE RECON --\n")
                 if config["virustotal"]:
-                    tg.create_task(virustotal_pipeline(graph))
+                    tg.create_task(virustotal_pipeline(self.graph))
 
                 if config["crtsh"]:
                     while True:
                         try:
-                            tg.create_task(crtsh_pipeline(graph))
+                            tg.create_task(crtsh_pipeline(self.graph))
                             break
                         except ValueError:
                             continue
 
                 if config["certspotter"]:
-                    tg.create_task(certspotter_pipeline(graph))
+                    tg.create_task(certspotter_pipeline(self.graph))
 
             print("\n-- [+] BEGIN DNS RECON --\n")
-            await dns_pipeline(graph)
+            await dns_pipeline(self.graph)
 
             print("\n-- [+] BEGIN BGP RECON --\n")
-            await cymru_pipeline(graph)
+            await cymru_pipeline(self.graph)
 
             end_scan = time.perf_counter()
 
             if config["output"] != None:
-                write_to_json(graph, config)
+                write_to_json(self.graph, config)
 
             print(f"\n\n\n\nTotal Scan Time: {end_scan - start_scan:.2f} seconds\n\n")
 
-            persistence_pipeline(graph, scan_id, connection)
+            persistence_pipeline(self.graph, scan_id, self.persister)
 
             return 1
 

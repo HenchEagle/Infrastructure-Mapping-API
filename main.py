@@ -1,15 +1,38 @@
 from core.engine import Engine
 from core.configuration import create_config
+from persistence.mysql.mysql_persister import MySQLPersister
+from worker.worker import WorkerManager
+import sys
 import asyncio
 
-async def main():
+class SQLitePersister():
+    pass
+
+class PostgreSQLPersister():
+    pass
+
+class StdoutPersister():
+    pass
+
+def main():
     config = create_config()
 
-    engine = Engine()
+    if config["database"] == "STDOUT":
+        persister = MySQLPersister()
+    elif config["database"] == "SQLITE":
+        persister = SQLitePersister()
+    elif config["database"] == "POSTGRES":
+        persister = PostgreSQLPersister()
+    else:
+        persister = MySQLPersister()
 
-    result = await engine.run_scan([domain for domain in config["domains"]], config)
+    worker = WorkerManager(persister, config)
 
-    return result
+    try:
+        worker.start_worker_manager()
+    except KeyboardInterrupt:
+        print("Exiting")
+        sys.exit()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
