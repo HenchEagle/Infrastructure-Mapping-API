@@ -60,7 +60,7 @@ options:
 
 **Entity Relationship Diagram**
 
-![Entity Relationship Diagram](Images/ERD.png)
+![Entity Relationship Diagram](docs/images/ERD.png)
 
 - Scans table for historical tracking, provides a vector for grouping relationships from seperate scans, newly discovered relationships can be easily tracked.
 - Junction table to facilitate many-to-many between scans and relationship
@@ -97,7 +97,7 @@ sqlite despite its portability as I wanted a more robust solution that is scalab
 
 ---
 # Program Demonstration
-![Image of Program Running](Images/Demonstration.png)
+![Image of Program Running](docs/images/Demonstration.png)
 
 # Dependencies
 

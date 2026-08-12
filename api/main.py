@@ -1,18 +1,22 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from core.extract_apex import extract_apex
-from persistence.writers.db_create_scan_record import create_scan_record
-from persistence.readers.check_last_scan import check_last_scan
-from persistence.readers.read_full_graph import read_full_graph
+from persistence.mysql.mysql_persister import MySQLPersister
+from dotenv import load_dotenv
+import os
 
 app = FastAPI()
+load_dotenv()
+
+if os.getenv("DB_TYPE") == "mysql":
+    persister = MySQLPersister()
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "null",
         "http://localhost:8080",
-        "http://192.168.0.52:8080"
+        "http://localhost:8000"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -44,10 +48,10 @@ def start_scan(domain: str):
     if not apex_domain:
         unprocessable_exception()
 
-    last_scanned = check_last_scan(apex_domain)
+    last_scanned = persister.get_last_scan(apex_domain)
 
     if not last_scanned or last_scanned > 24:
-        create_scan_record(apex_domain)
+        persister.create_scan_record(apex_domain)
         return {"message": "SUCCESS"}
     else:
         recently_scanned_exception()
@@ -59,9 +63,13 @@ def retrieve_data(domain: str):
     if not apex_domain:
         unprocessable_exception()
 
-    data = read_full_graph(apex_domain)
+    data = persister.get_full_graph(apex_domain)
 
     if data == {}:
         no_data_exception()
 
     return data
+
+@app.get("/api/v1/health")
+def check_health():
+     return {"message": "Healthy"}
