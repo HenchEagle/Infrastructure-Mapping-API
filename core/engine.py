@@ -47,12 +47,11 @@ class Engine():
 
             end_scan = time.perf_counter()
 
-            if config["output"] != None:
-                write_to_json(self.graph, config)
-
             print(f"\n\n\n\nTotal Scan Time: {end_scan - start_scan:.2f} seconds\n\n")
 
             persistence_pipeline(self.graph, scan_id, self.persister)
+
+            self.persister.close_connection()
 
             return 1
 

@@ -17,17 +17,21 @@ class MySQLPersister(Persister):
 
         DB_HOST = os.getenv("DB_HOST")
         DB_USER = os.getenv("DB_USER")
-        DB_PASSWD = os.getenv("DB_PASSWD")
+        DB_PASSWORD = os.getenv("DB_PASSWORD")
         DB_PORT = os.getenv("DB_PORT")
         DB_NAME = os.getenv("DB_NAME")
 
         return mysql.connector.connect(
             host=DB_HOST,
             user=DB_USER,
-            passwd=DB_PASSWD,
+            passwd=DB_PASSWORD,
             port=DB_PORT,
             database=DB_NAME
         )
+    
+    def close_connection(self):
+        self.connection.rollback()
+        self.connection.close()
 
     # Scan Repository
     def create_scan_record(self, domain):

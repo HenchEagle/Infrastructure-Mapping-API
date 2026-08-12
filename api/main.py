@@ -1,20 +1,14 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from core.extract_apex import extract_apex
-from core.configuration import create_config
 from persistence.mysql.mysql_persister import MySQLPersister
+from dotenv import load_dotenv
+import os
 
 app = FastAPI()
+load_dotenv()
 
-config = create_config(source="api")
-
-if config["database"] == "STDOUT":
-    persister = MySQLPersister()
-elif config["database"] == "SQLITE":
-    persister = SQLitePersister()
-elif config["database"] == "POSTGRES":
-    persister = PostgreSQLPersister()
-else:
+if os.getenv("DB_TYPE") == "mysql":
     persister = MySQLPersister()
 
 app.add_middleware(
@@ -22,7 +16,7 @@ app.add_middleware(
     allow_origins=[
         "null",
         "http://localhost:8080",
-        "http://192.168.0.52:8080"
+        "http://localhost:8000"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -46,8 +40,6 @@ def no_data_exception():
         status_code=404,
         detail="Failed, No data available for this domain."
     )
-
-
 
 @app.post("/api/v1/scan")
 def start_scan(domain: str):
@@ -77,3 +69,7 @@ def retrieve_data(domain: str):
         no_data_exception()
 
     return data
+
+@app.get("/api/v1/health")
+def check_health():
+     return {"message": "Healthy"}

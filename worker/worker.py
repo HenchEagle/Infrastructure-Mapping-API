@@ -5,11 +5,20 @@ class WorkerManager():
     def __init__(self, persister, config):
         self.persister = persister
         self.config = config
+        self.worker_persister = self.persister()
+
+    async def run(self):
+        try:
+            print("STARTING WORKERS")
+            await self.manage_workers()
+        except Exception as e:
+            print("ERROR: ", end="")
+            print(e)
 
     async def spawn_worker(self, scan_id, domain, sem):
         async with sem:
             try:
-                engine = Engine(self.persister)
+                engine = Engine(self.persister())
 
                 result = await engine.run_scan(domain, self.config, scan_id)
 
@@ -17,15 +26,15 @@ class WorkerManager():
 
             except Exception as e:
                 print(e)
-                self.persister.update_scan_status(scan_id, "failed")
+                self.worker_persister.update_scan_status(scan_id, "failed")
 
     async def get_job(self):
-        result = self.persister.get_scan_queue()
+        result = self.worker_persister.get_scan_queue()
 
         if result:
             scan_id, domain = result[0], result[1]
 
-            self.persister.update_scan_status(scan_id, "pending")
+            self.worker_persister.update_scan_status(scan_id, "pending")
             return scan_id, domain
         
         await asyncio.sleep(15)
@@ -53,11 +62,3 @@ class WorkerManager():
             tasks.add(task)
             task.add_done_callback(tasks.discard)
             found_job = False
-
-    def start_worker_manager(self):
-        try:
-            print("STARTING WORKERS")
-            asyncio.run(self.manage_workers())
-        except Exception as e:
-            print("ERROR: ", end="")
-            print(e)

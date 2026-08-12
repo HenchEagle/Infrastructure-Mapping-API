@@ -5,6 +5,10 @@ class Persister(ABC):
     def get_connection(self):
         pass
 
+    @abstractmethod
+    def close_connection(self):
+        pass
+
     # Scan Repository
     @abstractmethod
     def get_scan_queue(self):
