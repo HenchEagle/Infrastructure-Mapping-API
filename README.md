@@ -104,9 +104,11 @@ sqlite despite its portability as I wanted a more robust solution that is scalab
 ```
 aiohttp==3.14.1
 dnspython==2.8.0
-mysql_connector_repackaged==0.3.1
+fastapi==0.141.1
 python-dotenv==1.2.2
-Requests==2.34.2
 tldextract==5.3.1
+mysql.connector==2.2.9
+mysql-connector-python==26.7.0
+uvicorn==0.51.0
 ```
 
